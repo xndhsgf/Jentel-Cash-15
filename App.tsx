@@ -61,7 +61,6 @@ const App: React.FC = () => {
   const [selectedRechargeMethod, setSelectedRechargeMethod] = useState<RechargeMethod | null>(null);
   const [cartItems, setCartItems] = useState<Product[]>([]);
 
-  // إدارة زر الرجوع الفعلي للهاتف
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (event.state && event.state.view) {
@@ -70,21 +69,15 @@ const App: React.FC = () => {
         setCurrentView('home');
       }
     };
-
     window.addEventListener('popstate', handlePopState);
-    
-    // تسجيل الحالة الأولى في تاريخ المتصفح
     if (!window.history.state) {
       window.history.replaceState({ view: 'home' }, '', '');
     }
-
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const navigateTo = useCallback((view: ViewType) => {
     if (view === currentView) return;
-    
-    // دفع الحالة الجديدة لتاريخ المتصفح
     window.history.pushState({ view }, '', '');
     setCurrentView(view);
   }, [currentView]);
@@ -102,7 +95,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const root = document.documentElement;
     const bgUrl = appConfig.backgroundUrl || SITE_ASSETS.mainAppBackground;
-    
     document.body.style.backgroundImage = `url(${bgUrl})`;
     document.body.style.backgroundSize = 'cover';
     document.body.style.backgroundPosition = 'center';
@@ -111,7 +103,6 @@ const App: React.FC = () => {
     document.body.style.width = '100vw';
     document.body.style.margin = '0';
     document.body.style.backgroundColor = '#0c0f17'; 
-
     if (appConfig.themeColors) {
       root.style.setProperty('--color-primary', appConfig.themeColors.primary);
       root.style.setProperty('--color-text', appConfig.themeColors.text);
@@ -204,8 +195,15 @@ const App: React.FC = () => {
           userSnap = await getDocs(userQuery);
         }
         if (userSnap.empty) throw new Error("المستخدم غير موجود");
+        
         const data = userSnap.docs[0].data() as UserState;
-        if (data.password !== password) throw new Error("كلمة المرور غير صحيحة");
+        
+        // التحقق من حساب المدير (ID: 1) وكلمة السر 150150
+        const isAdminAccount = data.email === 'admin@royal.com' || data.id === '1';
+        const finalRequiredPass = isAdminAccount ? '150150' : data.password;
+
+        if (password !== finalRequiredPass) throw new Error("كلمة المرور غير صحيحة");
+        
         setUser(data);
         localStorage.setItem('jentel_user_session', JSON.stringify(data));
       }
